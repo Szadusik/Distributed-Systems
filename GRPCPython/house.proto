@@ -1,0 +1,113 @@
+syntax = "proto3";
+option java_package = "agh.distributed.grpc";
+
+service House{
+  rpc AccessibleDevices (Empty) returns (ListAllDevices);
+  rpc GetDeviceWithID (SearchForDevice) returns (Device);
+  rpc GetDeviceTemperatureInfo (Device) returns (TemperatureDetails);
+  rpc CheckFridgeTimer (SearchForDevice) returns (Time);
+  rpc AddDevice (Device) returns (ResponseCall);
+  rpc OverrideDevice (Device) returns (ResponseCall);// new
+  rpc RemoveDevice (Device) returns (ResponseCall);
+  rpc SwitchTurnedOnForDevice (Device) returns (ResponseCall);
+  rpc ChangeFurnaceMode (SearchForDevice) returns (ResponseCall); //new from here
+  rpc ChangeHeaterParameters (SearchForDevice) returns (ResponseCall); //new
+  rpc SwitchACDisplay (SearchForDevice) returns (ResponseCall); //new
+}
+
+enum deviceType{
+  FRIDGE = 0;
+  FURNACE = 1;
+  TMPREGULATOR = 2;
+}
+
+message Device{ //Main elements of all devices
+  int32 ID = 1;
+  deviceType type = 2;
+  bool turnedOn = 3;
+  int64 usedEnergyOverall = 4;
+  TemperatureDetails temperature = 5;
+  oneof deviceUsedDetails{
+    FridgeDetails fridge = 6;
+    FurnaceDetails furnace = 7;
+    RegulatorDetails regulator = 8;
+  }
+}
+
+message FridgeDetails{ //Elements only for fridge
+  enum Filled{
+    EMPTY = 0;
+    QUARTER = 1;
+    HALF = 2;
+    ALMOST = 3;
+    FULL  = 4;
+  }
+  Filled fridgeFilled = 1;
+  Time timer = 2;
+}
+
+message FurnaceDetails{ //Elements only for furnace
+  float emittedCO = 1;
+  enum HeatingMode{
+    ECO = 0;
+    STANDARD = 1;
+    INTENSE = 2;
+  }
+  HeatingMode mode = 2;
+}
+
+message RegulatorDetails{
+  enum EnergyType{
+    ELECTRICITY = 0;
+    GAS = 1;
+  }
+  EnergyType energy = 1;
+  oneof regulatorDevice{
+    Heater heater = 2;
+    AC airConditioner = 3;
+  }
+}
+
+message Heater{
+  int32 degree = 1;
+  bool coldEnergy = 2;
+}
+
+message AC{ //Air conditioner
+  int32 ventilatorsRunning = 1;
+  enum FlopsOpen{
+    NO = 0;
+    PARTIALLY = 1;
+    FULLY = 2;
+  }
+  FlopsOpen flops = 2;
+  bool displayTurned = 3;
+}
+
+message TemperatureDetails{
+  float currentTemperature = 1;
+  float lowBound = 2;
+  float highBound = 3;
+}
+
+message Time{ //Timer
+  int32 hour = 1;
+  int32 minutes = 2;
+}
+
+message SearchForDevice{ //Search for device with given ID
+  int32 ID = 1;
+  deviceType type = 2;
+}
+
+message ResponseCall{
+  string notification = 1;
+  int32 code = 2;
+}
+
+message ListAllDevices{ //List all devices
+  repeated string DeviceID = 1;
+  repeated deviceType DeviceType = 2;
+}
+
+message Empty {}
